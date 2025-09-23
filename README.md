@@ -1,8 +1,8 @@
 # CE-DDIM: Conditional Efficient DDIM for CBCT-to-CT Enhancement
 
-# CBCT → sCT with Diffusion Models and Baselines
+## CBCT → sCT with Diffusion Models and Baselines
 
-This repository contains code to generate **synthetic CT (sCT)** from **CBCT** with a diffusion-based model (dual‑head with DDIM sampling).
+### This repository contains code to generate **synthetic CT (sCT)** from **CBCT** with a diffusion-based model (dual‑head with DDIM sampling).
 ---
 
 ## Table of Contents
