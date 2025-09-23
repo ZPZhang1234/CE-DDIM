@@ -9,11 +9,8 @@
 
 * [Environment](#environment)
 * [Data & Preprocessing](#data--preprocessing)
-* [Project Structure](#project-structure)
-* [Quickstart](#quickstart)
 * [Training](#training)
 * [Evaluation](#evaluation)
-* [Visualization](#visualization)
 * [Reproducibility](#reproducibility)
 * [Notes on Windowing (HU)](#notes-on-windowing-hu)
 * [Results Tracking](#results-tracking)
@@ -80,35 +77,4 @@ Scripts:
 
 ---
 
-## Project Structure
-
-```
-<REPO>/
-  configs/
-    dualhead_default.yaml
-    ddim.yaml
-    pix2pix.yaml
-    unet.yaml
-  scripts/
-    train.py
-    eval.py
-    viz_compare.py
-    prepare_data.py
-  models/
-    dualhead/
-    pix2pix/
-    unet/
-  utils/
-    data.py            # datasets & transforms
-    metrics.py         # MAE, RMSE, PSNR, SSIM, etc.
-    windowing.py       # HU↔[0,1] conversions
-    vis.py             # plotting (multi‑panel, ROI insets, colorbars)
-  outputs/
-    ...                # logs, checkpoints, predictions
-```
-
 ---
-
-## Quickstart
-
-Train diffusion (dual‑head) 
