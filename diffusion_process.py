@@ -24,15 +24,14 @@ class CE_DDIM_trainer(nn.Module):
         self.T = T
         self.num_channel = num_channel
         self.noise_scheduler = noise_scheduler
-        if noise_scheduler == 'linear':
-            self.register_buffer(
-                'betas', torch.linspace(beta_1, beta_T, T).float())
-            alphas = 1. - self.betas
-            alphas_bar = torch.cumprod(alphas, dim=0)
-            self.register_buffer(
-                'sqrt_alphas_bar', torch.sqrt(alphas_bar).float())
-            self.register_buffer(
-                'sqrt_one_minus_alphas_bar', torch.sqrt(1. - alphas_bar).float())
+        self.register_buffer(
+            'betas', torch.linspace(beta_1, beta_T, T).float())
+        alphas = 1. - self.betas
+        alphas_bar = torch.cumprod(alphas, dim=0)
+        self.register_buffer(
+            'sqrt_alphas_bar', torch.sqrt(alphas_bar).float())
+        self.register_buffer(
+            'sqrt_one_minus_alphas_bar', torch.sqrt(1. - alphas_bar).float())
         self.LAM_NLL_BASE = 1.0
         self.N_WARM = 100
     
@@ -40,8 +39,8 @@ class CE_DDIM_trainer(nn.Module):
         B = x_0.size(0)
         t = torch.randint(0, self.T, (B,), device=x_0.device, dtype=torch.long)
 
-        ct   = x_0[:, :self.num_channel]          # ground-truth CT  ([-1,1] assumed)
-        cbct = x_0[:, self.num_channel:]          # conditioning CBCT
+        ct   = x_0[:, :self.num_channel]        
+        cbct = x_0[:, self.num_channel:]          
         # ───────────────── forward diffusion ────────────────────
         noise = torch.randn_like(ct)
         x_t   = (extract(self.sqrt_alphas_bar, t, ct.shape) * ct +
@@ -50,36 +49,15 @@ class CE_DDIM_trainer(nn.Module):
         # ───────────────── model prediction ─────────────────────
         eps_hat, log_var_hat = self.model(torch.cat([x_t, cbct], dim=1), t)
         log_var_hat = torch.clamp(log_var_hat, min=-14.0, max=2.0)
-        # Weight term  w_t = 1/σ_t²  where σ_t² = (1-ᾱ_t)
         w_t = 1. / (extract(self.sqrt_one_minus_alphas_bar, t, ct.shape) ** 2)
-
-        # ---- choose training regime --------------------------------------
         if lam_nll_param == 0.0:
-            # Warm-up: ignore variance head, plain MSE, freeze its params
-            # with torch.no_grad():
-            #     logvar_params = (
-            #         self.model.module.logvar_head.parameters()
-            #         if hasattr(self.model, "module") else
-            #         self.model.logvar_head.parameters()
-            #     )
-            #     for p in logvar_params:
-            #         p.zero_()
-
             L_eps = F.mse_loss(eps_hat, eps_true).detach()  # frozen path
             dummy   = torch.zeros([], device=ct.device, requires_grad=True)
             L_var   = dummy
             tv_loss = dummy
             prior_loss = dummy
-
         else:
-
-            # with torch.amp.autocast('cuda', enabled=False):
-            #     # diff  = (eps_true - eps_hat).float()
-            #     # w_f32 = w_t.float()
-            #     # noise_loss_mse = F.mse_loss(eps_hat, eps_true)
-            #     # L_eps = (w_f32 * diff.pow(2)).mean() / w_f32.mean()
             L_eps = F.mse_loss(eps_hat, eps_true).detach()  
-
             # # ---- L_var ----------------------------------------------------
             with torch.no_grad():
                 diff  = (eps_true - eps_hat).float()
@@ -89,14 +67,6 @@ class CE_DDIM_trainer(nn.Module):
             var_inv     = torch.exp(-log_var_hat)       # e^{-log σ²}
             L_var_pixel = w_t * (var_inv * diff_sq + log_var_hat)
             L_var       = L_var_pixel.mean() / w_t.mean()
-            # L_var       = L_var_pixel.mean()
-
-            # ratio = (torch.exp(-log_var_hat) * diff_sq).mean()   # should be ≈ 1
-            # print("ratio", ratio.item(),
-            #     "logσ² mean", log_var_hat.mean().item(),
-            #     "min", log_var_hat.min().item(),
-            #     "max", log_var_hat.max().item())
-
 
             LOG_SIGMA0_SQ = 0.0     # ε ~ N(0,1) by construction
             LAMBDA_TV     = 1e-4
@@ -107,8 +77,6 @@ class CE_DDIM_trainer(nn.Module):
             prior_loss = LAMBDA_PRIOR * (log_var_hat - LOG_SIGMA0_SQ).pow(2).mean()
 
         return L_eps, L_var, tv_loss, prior_loss
-
-
 
 class CE_DDIM_sampler(nn.Module):
 
@@ -204,48 +172,6 @@ class CE_DDIM_sampler(nn.Module):
 
             noise = sigma_t * torch.randn_like(x_t) if self.eta > 0 else 0.0
             x_t   = safe_sqrt(alpha_prev) * mu_x0 + dir_scale * eps_hat + noise
-
-        # ----------------- optional refine pass -------------------------------
-        if refine and self.refine_steps > 0:
-            # high-σ mask (in HU units)
-            high_mask = (sigma_out * self.hu_scale) > self.sigma_thresh
-            if high_mask.any():
-                tile = self.tile
-                idxs = torch.nonzero(high_mask.any(0).any(0), as_tuple=False)
-                tiles = {(i // tile, j // tile) for i, j in idxs.tolist()}
-
-                # we refine by re-running the *last* DDIM transition locally
-                last_t   = torch.full((B,), ts[-2], device=device, dtype=torch.long)
-                alpha_t  = self._extract(self.alphas_cumprod, last_t, x_t.shape)
-
-                for _ in range(self.refine_steps):
-                    for (ti, tj) in tiles:
-                        h0, h1 = ti * tile, min((ti + 1) * tile, H)
-                        w0, w1 = tj * tile, min((tj + 1) * tile, W)
-
-                        x_patch   = x_t[:, :, h0:h1, w0:w1]
-                        cbct_patch= cbct[:, :, h0:h1, w0:w1]
-
-                        eps_hat_p, log_var_hat_p = self.model(
-                            torch.cat([x_patch, cbct_patch], 1), last_t)
-                        log_var_hat_p = torch.clamp(log_var_hat_p, -12.0, 3.0)
-
-                        mu_x0_p = (x_patch - (1 - alpha_t).sqrt() * eps_hat_p) / safe_sqrt(alpha_t)
-                        mu_x0_p = torch.clamp(mu_x0_p, 0.0, 1.0)
-                        # deterministic (η=0) correction step
-                        x_refined = safe_sqrt(alpha_t) * mu_x0_p + (1 - alpha_t).sqrt() * eps_hat_p
-                        x_t[:, :, h0:h1, w0:w1] = x_refined
-
-                # recompute μ, σ after refinement
-                t0 = torch.zeros((B,), device=device, dtype=torch.long)
-                alpha0 = self._extract(self.alphas_cumprod, t0, x_t.shape)
-                eps_hat0, log_var_hat0 = self.model(torch.cat([x_t, cbct], 1), t0)
-                log_var_hat0 = torch.clamp(log_var_hat0, -12.0, 3.0)
-                sigma_eps2_0 = torch.exp(log_var_hat0)
-
-                mu_out    = (x_t - (1 - alpha0).sqrt() * eps_hat0) / safe_sqrt(alpha0)
-                mu_out    = torch.clamp(mu_out, 0.0, 1.0)
-                sigma_out = safe_sqrt((1 - alpha0) / alpha0) * safe_sqrt(sigma_eps2_0) * self.alpha_star
 
         mu_hu    = (mu_out * 0.5 + 0.5) * self.hu_scale + self.HU_min
         sigma_hu = sigma_out * self.hu_scale
