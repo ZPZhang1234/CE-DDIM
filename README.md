@@ -116,16 +116,13 @@ The dual-head diffusion model consists of:
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `sample_steps` | DDIM sampling steps | 10 |
-| `refine_steps` | Uncertainty-guided refinement | 0 |
 | `alpha_star` | Uncertainty calibration factor | 1.0 |
-| `fit_alpha_star` | Auto-fit calibration parameter | False |
 
 ## 🔬 Evaluation Metrics
 
 The evaluation script computes:
 
 - **Image Quality**: PSNR, SSIM, NMSE
-- **Uncertainty Calibration**: Coverage at 68.3%, 95%, 99% confidence levels
 - **Timing**: Inference time per batch and per sample
 
 ## 🎯 Results
@@ -133,7 +130,6 @@ The evaluation script computes:
 Expected performance on medical CT denoising:
 - **PSNR**: 35-40 dB
 - **SSIM**: 0.85-0.95
-- **Uncertainty Calibration**: Coverage close to theoretical levels
 - **Inference Time**: ~0.5-2s per sample (depending on sampling steps)
 
 ## 🔧 Advanced Usage
@@ -156,21 +152,7 @@ python evaluate.py --fit_alpha_star --model_path model.pt --data_path data/
 python evaluate.py --alpha_star 1.2 --model_path model.pt --data_path data/
 ```
 
-## 🐛 Troubleshooting
-
-**Common Issues:**
-
-1. **CUDA out of memory**: Reduce `batch_size` or use gradient accumulation
-2. **Poor uncertainty calibration**: Try fitting `alpha_star` parameter
-3. **Slow convergence**: Check learning rates and loss weights
-
-**Performance Tips:**
-
-- Use mixed precision training for faster training
-- Enable `torch.backends.cudnn.benchmark = True` for fixed input sizes
-- Use multiple workers for data loading
-
-## 📚 Citation
+<!-- ## 📚 Citation
 
 If you use this code in your research, please cite:
 
@@ -181,7 +163,7 @@ If you use this code in your research, please cite:
   journal={Your Journal},
   year={2024}
 }
-```
+``` -->
 
 ## 📄 License
 
@@ -195,10 +177,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 For questions or issues, please:
 - Open an issue on GitHub
-- Contact: your.email@institution.edu
-
-## 🙏 Acknowledgments
-
-- PyTorch team for the excellent deep learning framework
-- The diffusion models community for foundational research
-- Medical imaging researchers for domain expertise
+- Contact: zipei@aalto.fi
