@@ -25,5 +25,5 @@ flake8>=3.9.0
 isort>=5.9.0
 
 # Medical Imaging (Optional)
-# SimpleITK>=2.1.0  # Uncomment if working with medical images
-# nibabel>=3.2.0    # Uncomment if working with NIfTI files
+SimpleITK>=2.1.0  
+nibabel>=3.2.0    

@@ -195,4 +195,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 For questions or issues, please:
 - Open an issue on GitHub
-- Contact: zipei@aalto.fi
+- Contact: zipei.zhang@aalto.fi
