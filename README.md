@@ -97,14 +97,14 @@ dual-head-diffusion/
 The dual-head diffusion model consists of:
 
 1. **Shared Backbone**: UNet encoder-decoder for feature extraction
-2. **Epsilon Head (eps_head)**: Predicts noise for denoising (frozen during dual-head training)
-3. **Log-variance Head (logvar_head)**: Predicts uncertainty estimates (trainable)
+2. **Epsilon Head (eps_head)**: Predicts noise for denoising 
+3. **Log-variance Head (logvar_head)**: Predicts log-variance estimates 
 
-### Training Strategy
+<!-- ### Training Strategy
 
 1. **Pre-training**: Train single-head model for noise prediction
-2. **Dual-head initialization**: Load pre-trained weights and add uncertainty head
-3. **Uncertainty training**: Freeze eps_head, train backbone + logvar_head with uncertainty loss
+2. **Dual-head initialization**: Load pre-trained weights and add log-variance head
+3. **log-variance training**: Freeze eps_head, train backbone + logvar_head with log-variance loss -->
 
 ## 📈 Key Parameters
 
@@ -133,7 +133,7 @@ The dual-head diffusion model consists of:
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `sample_steps` | DDIM sampling steps | 10 |
+| `sample_steps` | DDIM sampling steps | 5 |
 | `alpha_star` | Uncertainty calibration factor | 1.0 |
 
 ## 🔬 Evaluation Metrics
@@ -158,7 +158,7 @@ The training script uses a combination of:
 - **L_var**: Negative log-likelihood for uncertainty learning
 - **TV Loss**: Total variation regularization for spatial smoothness
 - **Prior Loss**: L2 regularization toward expected noise levels
-
+<!-- 
 ### Uncertainty Calibration
 
 The `alpha_star` parameter scales predicted uncertainties for proper calibration:
@@ -168,7 +168,7 @@ python evaluate.py --fit_alpha_star --model_path model.pt --data_path data/
 
 # Use specific alpha_star value
 python evaluate.py --alpha_star 1.2 --model_path model.pt --data_path data/
-```
+``` -->
 
 <!-- ## 📚 Citation
 
