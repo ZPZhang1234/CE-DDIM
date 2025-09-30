@@ -1,6 +1,3 @@
-# Default Evaluation Configuration for Dual-Head Diffusion Model
-# =============================================================
-
 # Dataset Parameters
 dataset_type: "pelvis"  # Options: "pelvis" or "brain"
 
@@ -36,9 +33,6 @@ beta_T: 0.02
 # HU Range for Medical Imaging
 hu_min: -1000
 hu_max: 3000
-
-# Uncertainty Calibration Levels
-coverage_levels: [0.683, 0.95, 0.99]
 
 # Output Settings
 experiment_name: null  # Will be auto-generated if not specified

@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-import math
 
 
 def extract(v, t, x_shape):
@@ -45,24 +44,22 @@ class CE_DDIM_trainer(nn.Module):
         noise = torch.randn_like(ct)
         x_t   = (extract(self.sqrt_alphas_bar, t, ct.shape) * ct +
                  extract(self.sqrt_one_minus_alphas_bar, t, ct.shape) * noise)
-        eps_true = noise                        # target noise
+        eps_true = noise                        # ground-truth noise
         # ───────────────── model prediction ─────────────────────
         eps_hat, log_var_hat = self.model(torch.cat([x_t, cbct], dim=1), t)
         log_var_hat = torch.clamp(log_var_hat, min=-14.0, max=2.0)
         w_t = 1. / (extract(self.sqrt_one_minus_alphas_bar, t, ct.shape) ** 2)
 
         # ───────────────── loss computation ─────────────────────
-        
-        # Compute prediction error for variance loss (detached from eps gradients)
+        # Compute prediction error for variance loss
         diff_sq = (eps_true - eps_hat).pow(2)
         L_eps = (eps_hat, eps_true).pow(2).detach() # For monitoring only
 
-        # L_var: Negative log-likelihood loss for uncertainty learning
+        # L_var: Negative log-likelihood loss
         var_inv = torch.exp(-log_var_hat)      # 1/σ̂²
         L_var_pixel = w_t * (var_inv * diff_sq + log_var_hat)
         L_var = L_var_pixel.mean() / w_t.mean()
 
-        # Regularization terms
         LOG_SIGMA0_SQ = 0.0     # Expected noise variance (ε ~ N(0,1))
         LAMBDA_TV     = 1e-6    # Total variation weight
         LAMBDA_PRIOR  = 1e-6    # Prior regularization weight

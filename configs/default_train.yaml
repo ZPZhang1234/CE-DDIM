@@ -5,7 +5,7 @@
 dataset_name: "cbct"
 dataset_type: "pelvis"  # Options: "pelvis" or "brain"
 image_size: 256
-batch_size: 50
+batch_size: 16
 
 # Model Architecture Parameters
 T: 1000
@@ -19,12 +19,12 @@ output_channel: 3
 num_channel: 3
 
 # Training Parameters
-n_epochs: 50000
+n_epochs: 2000
 beta_1: 4e-4
 beta_T: 0.02
 save_interval: 200
-test_interval: 20000
-sample_steps: 400
+test_interval: 100
+sample_steps: 5
 
 # Learning Rates
 backbone_lr: 1e-5
