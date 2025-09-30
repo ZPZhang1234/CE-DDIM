@@ -52,11 +52,10 @@ class CE_DDIM_trainer(nn.Module):
         w_t = 1. / (extract(self.sqrt_one_minus_alphas_bar, t, ct.shape) ** 2)
 
         # ───────────────── loss computation ─────────────────────
-        # L_eps: Always detached since eps_head is frozen (no gradients needed)
-        L_eps = F.mse_loss(eps_hat, eps_true)
         
         # Compute prediction error for variance loss (detached from eps gradients)
-        diff_sq = (eps_true - eps_hat).pow(2).detach()
+        diff_sq = (eps_true - eps_hat).pow(2)
+        L_eps = (eps_hat, eps_true).pow(2).detach() # For monitoring only
 
         # L_var: Negative log-likelihood loss for uncertainty learning
         var_inv = torch.exp(-log_var_hat)      # 1/σ̂²
@@ -73,8 +72,6 @@ class CE_DDIM_trainer(nn.Module):
 
         return L_eps, L_var, tv_loss, prior_loss
 
-
-        return L_eps, L_var, tv_loss, prior_loss
 
 class CE_DDIM_sampler(nn.Module):
 

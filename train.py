@@ -239,9 +239,7 @@ def lam_nll(epoch: int, N_WARM: int, LAM_NLL_BASE: float) -> float:
 def train_epoch(model: nn.Module, trainer: nn.Module, dataloader: DataLoader, 
                 optimizer: optim.Optimizer, epoch: int, config: Config, 
                 device: torch.device, logger: logging.Logger) -> Dict[str, float]:
-    """Train for one epoch."""
-    model.train()
-    
+    model.train()  
     # Metrics tracking
     metrics = {
         'loss': 0.0,
