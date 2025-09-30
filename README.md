@@ -60,14 +60,19 @@ python train.py --config configs/default_train.yaml --data_path /path/to/data --
 python evaluate.py --model_path /path/to/trained_model.pt --data_path /path/to/test/data
 ```
 
-**With uncertainty calibration:**
+**Brain dataset evaluation:**
 ```bash
-python evaluate.py --model_path /path/to/model.pt --data_path /path/to/data --fit_alpha_star
+python evaluate.py --model_path /path/to/brain_model.pt --data_path /path/to/brain/data --dataset_type brain
+```
+
+**With custom configuration:**
+```bash
+python evaluate.py --config configs/default_eval.yaml --model_path /path/to/model.pt --data_path /path/to/data --dataset_type brain
 ```
 
 **Custom evaluation settings:**
 ```bash
-python evaluate.py --config configs/default_eval.yaml --model_path /path/to/model.pt --data_path /path/to/data --sample_steps 20 --refine_steps 5
+python evaluate.py --model_path /path/to/model.pt --data_path /path/to/data --dataset_type pelvis --sample_steps 20 --batch_size 10
 ```
 
 ## 📁 Project Structure

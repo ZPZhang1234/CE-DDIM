@@ -46,6 +46,9 @@ class EvalConfig:
         self.output_channel = 2
         self.num_channel = 2
         
+        # Dataset parameters
+        self.dataset_type = "pelvis"  # pelvis or brain
+        
         # Sampling parameters
         self.sample_steps = 10
         self.skip_steps = 1
@@ -132,6 +135,8 @@ def main():
     parser.add_argument('--config', type=str, help='Path to config YAML file')
     parser.add_argument('--model_path', type=str, required=True, help='Path to trained model checkpoint')
     parser.add_argument('--data_path', type=str, required=True, help='Path to evaluation data')
+    parser.add_argument('--dataset_type', type=str, choices=['pelvis', 'brain'], default='pelvis',
+                       help='Dataset type: pelvis or brain (affects windowing parameters)')
     parser.add_argument('--output_dir', type=str, default='./evaluation_results', help='Directory to save results')
     parser.add_argument('--experiment_name', type=str, help='Experiment name for logging')
     parser.add_argument('--batch_size', type=int, help='Batch size for evaluation')
@@ -144,19 +149,18 @@ def main():
     config.data_path = args.data_path
     config.model_path = args.model_path
     config.output_dir = args.output_dir
+    config.dataset_type = args.dataset_type
     
     # Override config with command line arguments
     if args.batch_size:
         config.batch_size = args.batch_size
     if args.sample_steps:
         config.sample_steps = args.sample_steps
-    if args.refine_steps is not None:
-        config.refine_steps = args.refine_steps
     
     # Setup experiment name
     if not args.experiment_name:
         model_name = Path(args.model_path).stem
-        args.experiment_name = f"eval_{model_name}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        args.experiment_name = f"eval_{config.dataset_type}_{model_name}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
     
     # Create output directory
     experiment_dir = os.path.join(config.output_dir, args.experiment_name)
@@ -169,6 +173,7 @@ def main():
     logger.info("DUAL-HEAD DIFFUSION MODEL EVALUATION")
     logger.info("=" * 80)
     logger.info(f"Experiment: {args.experiment_name}")
+    logger.info(f"Dataset type: {config.dataset_type}")
     logger.info(f"Model: {config.model_path}")
     logger.info(f"Data: {config.data_path}")
     logger.info(f"Output: {experiment_dir}")
@@ -188,7 +193,8 @@ def main():
     _, test_dataset = create_paired_datasets(
         data_dir=config.data_path, 
         split_ratio=0.8, 
-        image_size=config.image_size
+        image_size=config.image_size,
+        dataset_type=config.dataset_type
     )
     
     test_dataloader = DataLoader(
@@ -237,7 +243,7 @@ def main():
         skip_steps=config.skip_steps,
         eta=config.eta,
         num_channel=config.num_channel,
-        alpha_star=args.alpha_star,
+        alpha_star=1.0,
         hu_range=(config.hu_min, config.hu_max),
         sigma_thresh_hu=config.refine_hu_thresh
     ).to(device)
