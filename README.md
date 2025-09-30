@@ -1,4 +1,4 @@
-# Dual-Head Diffusion Model for Uncertainty-Aware Image Denoising
+# CE-DDIM: Conditional Efficient Diffusion Method for Cone-Beam CT Enhancement
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/release/python-380/)
@@ -8,12 +8,9 @@ A PyTorch implementation of a dual-head diffusion model that provides both high-
 
 ## 🚀 Features
 
-- **Dual-head architecture** with frozen noise prediction and trainable uncertainty estimation
-- **Uncertainty calibration** with alpha_star parameter fitting
+- **Dual-head architecture** with noise prediction and trainable uncertainty estimation
 - **Distributed training** support with PyTorch DDP
 - **Comprehensive evaluation** with image quality and uncertainty metrics
-- **Flexible configuration** via YAML files and command-line arguments
-- **Professional logging** and experiment tracking
 - **Medical imaging focus** with HU (Hounsfield Unit) support
 
 ## 📋 Requirements
