@@ -39,42 +39,40 @@ class CE_DDIM_trainer(nn.Module):
         B = x_0.size(0)
         t = torch.randint(0, self.T, (B,), device=x_0.device, dtype=torch.long)
 
-        ct   = x_0[:, :self.num_channel]        
-        cbct = x_0[:, self.num_channel:]          
+        ct   = x_0[:, :self.num_channel]       # ground-truth CT
+        cbct = x_0[:, self.num_channel:]        # conditioning CBCT
         # ───────────────── forward diffusion ────────────────────
         noise = torch.randn_like(ct)
         x_t   = (extract(self.sqrt_alphas_bar, t, ct.shape) * ct +
                  extract(self.sqrt_one_minus_alphas_bar, t, ct.shape) * noise)
-        eps_true = noise                          # target ε
+        eps_true = noise                        # target noise
         # ───────────────── model prediction ─────────────────────
         eps_hat, log_var_hat = self.model(torch.cat([x_t, cbct], dim=1), t)
         log_var_hat = torch.clamp(log_var_hat, min=-14.0, max=2.0)
         w_t = 1. / (extract(self.sqrt_one_minus_alphas_bar, t, ct.shape) ** 2)
-        if lam_nll_param == 0.0:
-            L_eps = F.mse_loss(eps_hat, eps_true).detach()  # frozen path
-            dummy   = torch.zeros([], device=ct.device, requires_grad=True)
-            L_var   = dummy
-            tv_loss = dummy
-            prior_loss = dummy
-        else:
-            L_eps = F.mse_loss(eps_hat, eps_true).detach()  
-            # # ---- L_var ----------------------------------------------------
-            with torch.no_grad():
-                diff  = (eps_true - eps_hat).float()
-                e_detached_sq = diff.pow(2).detach()
 
-            diff_sq = e_detached_sq
-            var_inv     = torch.exp(-log_var_hat)       # e^{-log σ²}
-            L_var_pixel = w_t * (var_inv * diff_sq + log_var_hat)
-            L_var       = L_var_pixel.mean() / w_t.mean()
+        # ───────────────── loss computation ─────────────────────
+        # L_eps: Always detached since eps_head is frozen (no gradients needed)
+        L_eps = F.mse_loss(eps_hat, eps_true)
+        
+        # Compute prediction error for variance loss (detached from eps gradients)
+        diff_sq = (eps_true - eps_hat).pow(2).detach()
 
-            LOG_SIGMA0_SQ = 0.0     # ε ~ N(0,1) by construction
-            LAMBDA_TV     = 1e-4
-            LAMBDA_PRIOR  = 1e-5
+        # L_var: Negative log-likelihood loss for uncertainty learning
+        var_inv = torch.exp(-log_var_hat)      # 1/σ̂²
+        L_var_pixel = w_t * (var_inv * diff_sq + log_var_hat)
+        L_var = L_var_pixel.mean() / w_t.mean()
 
-            # regularisers --------------------------------------------------
-            tv_loss    = LAMBDA_TV    * total_variation(log_var_hat.float())
-            prior_loss = LAMBDA_PRIOR * (log_var_hat - LOG_SIGMA0_SQ).pow(2).mean()
+        # Regularization terms
+        LOG_SIGMA0_SQ = 0.0     # Expected noise variance (ε ~ N(0,1))
+        LAMBDA_TV     = 1e-6    # Total variation weight
+        LAMBDA_PRIOR  = 1e-6    # Prior regularization weight
+
+        tv_loss = LAMBDA_TV * total_variation(log_var_hat.float())
+        prior_loss = LAMBDA_PRIOR * (log_var_hat - LOG_SIGMA0_SQ).pow(2).mean()
+
+        return L_eps, L_var, tv_loss, prior_loss
+
 
         return L_eps, L_var, tv_loss, prior_loss
 
