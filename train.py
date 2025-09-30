@@ -44,6 +44,7 @@ class Config:
     def __init__(self, config_path: Optional[str] = None):
         # Default configuration
         self.dataset_name = "cbct"
+        self.dataset_type = "pelvis"  # pelvis or brain
         self.noise_scheduler = 'linear'
         self.image_size = 256
         self.batch_size = 50
@@ -317,6 +318,8 @@ def main():
     parser = argparse.ArgumentParser(description='Dual-Head Diffusion Model Training')
     parser.add_argument('--config', type=str, help='Path to config YAML file')
     parser.add_argument('--data_path', type=str, required=True, help='Path to training data')
+    parser.add_argument('--dataset_type', type=str, choices=['pelvis', 'brain'], default='pelvis', 
+                       help='Dataset type: pelvis or brain (affects windowing parameters)')
     parser.add_argument('--pretrained_path', type=str, help='Path to pretrained single-head model')
     parser.add_argument('--save_dir', type=str, default='./experiments', help='Directory to save outputs')
     parser.add_argument('--experiment_name', type=str, help='Experiment name for logging')
@@ -331,6 +334,7 @@ def main():
     # Load configuration
     config = Config(args.config)
     config.data_path = args.data_path
+    config.dataset_type = args.dataset_type
     if args.pretrained_path:
         config.pretrained_path = args.pretrained_path
     if args.experiment_name:
@@ -340,7 +344,7 @@ def main():
     
     # Setup experiment directory
     if not config.experiment_name:
-        config.experiment_name = f"dual_head_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        config.experiment_name = f"dual_head_{config.dataset_type}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
     
     experiment_dir = os.path.join(args.save_dir, config.experiment_name)
     config.save_weight_dir = os.path.join(experiment_dir, 'checkpoints')
@@ -362,6 +366,7 @@ def main():
         logger.info("DUAL-HEAD DIFFUSION MODEL TRAINING")
         logger.info("="*80)
         logger.info(f"Experiment: {config.experiment_name}")
+        logger.info(f"Dataset type: {config.dataset_type}")
         logger.info(f"Device: {device}")
         logger.info(f"World size: {world_size}")
         logger.info(f"Data path: {config.data_path}")
@@ -376,7 +381,8 @@ def main():
     train_set, test_dataset = create_paired_datasets(
         data_dir=config.data_path, 
         split_ratio=0.8, 
-        image_size=config.image_size
+        image_size=config.image_size,
+        dataset_type=config.dataset_type
     )
     
     # Create samplers for distributed training

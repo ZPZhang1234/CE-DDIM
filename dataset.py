@@ -33,9 +33,10 @@ class Windowing:
         return image
 
 class CBCTDataset(Dataset):
-    def __init__(self, patient_dirs, mode="train", image_size=64):
+    def __init__(self, patient_dirs, mode="train", image_size=64, dataset_type="pelvis"):
         self.patient_dirs = patient_dirs
         self.image_size = image_size
+        self.dataset_type = dataset_type.lower()
         
         self.pct_slices = []
         self.cbct_slices = []
@@ -59,21 +60,25 @@ class CBCTDataset(Dataset):
             self.cbct_slices.extend(cbct_array)
             self.mask_slices.extend(mask_array)
 
-        # Define windowing parameters
-        window_params_pelvis = [
-            {'center': 1000, 'width': 4000},   # Window center=1000, width=4000
-            {'center': 50, 'width': 400},      # Window center=50, width=400
-            {'center': 600, 'width': 3000},    # Window center=600, width=3000
-        ]
-
-        window_params_brain = [
-            {'center': 1000, 'width': 4000},   # Window center=1000, width=4000
-            {'center': 50, 'width': 400},      # Window center=50, width=400
-        ]
+        # Define windowing parameters based on dataset type
+        if self.dataset_type == "pelvis":
+            window_params = [
+                {'center': 1000, 'width': 4000},   # Bone window
+                {'center': 50, 'width': 400},      # Soft tissue window
+                {'center': 600, 'width': 3000},    # Intermediate window
+            ]
+        elif self.dataset_type == "brain":
+            window_params = [
+                {'center': 1000, 'width': 4000},   # Bone window
+                {'center': 50, 'width': 400},      # Soft tissue/brain window
+                {'center': 35, 'width': 80},       # Brain-specific window
+            ]
+        else:
+            raise ValueError(f"Unsupported dataset type: {self.dataset_type}. Choose 'pelvis' or 'brain'.")
 
         # Define transformations for PCT
         self.pct_transforms = []
-        for params in window_params_pelvis:
+        for params in window_params:
             self.pct_transforms.append(transforms.Compose([
                 transforms.ToTensor(),
                 transforms.Resize([self.image_size, self.image_size]),
@@ -82,7 +87,7 @@ class CBCTDataset(Dataset):
 
         # Define transformations for CBCT
         self.cbct_transforms = []
-        for params in window_params_pelvis:
+        for params in window_params:
             self.cbct_transforms.append(transforms.Compose([
                 transforms.ToTensor(),
                 transforms.Resize([self.image_size, self.image_size]),
@@ -130,20 +135,23 @@ class CBCTDataset(Dataset):
     def __len__(self):
         return max(len(self.pct_slices), len(self.cbct_slices), len(self.mask_slices))
 
-def create_paired_datasets(data_dir, split_ratio=0.8, image_size=64):
+def create_paired_datasets(data_dir, split_ratio=0.8, image_size=64, dataset_type="pelvis"):
     patient_dirs = sorted(glob.glob(os.path.join(data_dir, "*")))
     if len(patient_dirs) == 0:
         raise ValueError(f"No patient directories found in {data_dir}. Please check the path and structure.")
     
     # Split the patient directories into training and testing sets
     train_dirs, test_dirs = train_test_split(patient_dirs, train_size=split_ratio, random_state=42)
+    print(f"Dataset type: {dataset_type}")
     print("Train directories:", train_dirs)
     print("Test directories:", test_dirs)
     print("Length of train directories:", len(train_dirs))
     print("Length of test directories:", len(test_dirs))
     
-    # Create datasets
-    train_set = CBCTDataset(patient_dirs=train_dirs, mode="train", image_size=image_size)
-    test_dataset = CBCTDataset(patient_dirs=test_dirs, mode="test", image_size=image_size)
+    # Create datasets with specified dataset type
+    train_set = CBCTDataset(patient_dirs=train_dirs, mode="train", 
+                           image_size=image_size, dataset_type=dataset_type)
+    test_dataset = CBCTDataset(patient_dirs=test_dirs, mode="test", 
+                              image_size=image_size, dataset_type=dataset_type)
     
     return train_set, test_dataset

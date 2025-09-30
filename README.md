@@ -38,14 +38,19 @@ pip install -r requirements.txt
 python train.py --data_path /path/to/training/data --pretrained_path /path/to/single_head_model.pt
 ```
 
+**Brain dataset training:**
+```bash
+python train.py --data_path /path/to/brain/data --dataset_type brain --pretrained_path /path/to/model.pt
+```
+
 **Multi-GPU distributed training:**
 ```bash
-torchrun --nproc_per_node=4 train.py --data_path /path/to/data --use_wandb --experiment_name my_experiment
+torchrun --nproc_per_node=4 train.py --data_path /path/to/data --dataset_type pelvis --use_wandb --experiment_name my_experiment
 ```
 
 **With custom configuration:**
 ```bash
-python train.py --config configs/custom_config.yaml --data_path /path/to/data
+python train.py --config configs/default_train.yaml --data_path /path/to/data --dataset_type brain
 ```
 
 ### Evaluation
@@ -98,6 +103,18 @@ The dual-head diffusion model consists of:
 
 ## 📈 Key Parameters
 
+### Dataset Configuration
+
+| Parameter | Description | Options | Default |
+|-----------|-------------|---------|---------|
+| `dataset_type` | Medical imaging dataset type | `pelvis`, `brain` | `pelvis` |
+| `image_size` | Input image resolution | Any integer | 256 |
+| `batch_size` | Training batch size | Any integer | 50 |
+
+**Dataset Types:**
+- **Pelvis**: Uses bone (1000/4000), soft tissue (50/400), and intermediate (600/3000) windowing
+- **Brain**: Uses bone (1000/4000), soft tissue (50/400), and brain-specific (35/80) windowing
+
 ### Training Configuration
 
 | Parameter | Description | Default |
@@ -105,7 +122,6 @@ The dual-head diffusion model consists of:
 | `backbone_lr` | Learning rate for backbone | 1e-5 |
 | `logvar_lr` | Learning rate for uncertainty head | 1e-4 |
 | `LAM_NLL_BASE` | NLL loss weight | 5.0 |
-| `batch_size` | Training batch size | 50 |
 | `n_epochs` | Number of training epochs | 50000 |
 
 ### Evaluation Configuration

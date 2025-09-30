@@ -1,0 +1,42 @@
+# Default Training Configuration for Dual-Head Diffusion Model
+# ===========================================================
+
+# Dataset Parameters
+dataset_name: "cbct"
+dataset_type: "pelvis"  # Options: "pelvis" or "brain"
+image_size: 256
+batch_size: 50
+
+# Model Architecture Parameters
+T: 1000
+ch: 128
+ch_mult: [1, 2, 3, 4]
+attn: [2]
+num_res_blocks: 2
+dropout: 0.2
+input_channel: 6
+output_channel: 3
+num_channel: 3
+
+# Training Parameters
+n_epochs: 50000
+beta_1: 4e-4
+beta_T: 0.02
+save_interval: 200
+test_interval: 20000
+sample_steps: 400
+
+# Learning Rates
+backbone_lr: 1e-5
+logvar_lr: 1e-4
+
+# Loss Parameters
+LAM_NLL_BASE: 5
+N_WARM: 0
+
+# Diffusion Parameters
+noise_scheduler: 'linear'
+
+# Logging Parameters
+use_wandb: false
+project_name: "dual-head-diffusion"
