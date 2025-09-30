@@ -84,8 +84,7 @@ class CE_DDIM_sampler(nn.Module):
                  skip_steps=1, eta=0.0,
                  num_channel=3, alpha_star=1.0,
                  hu_range=(-1000, 3000),
-                 sigma_thresh_hu=20,  # HU
-                 refine_steps=5, refine_tile=32):
+                 sigma_thresh_hu=20):
         super().__init__()
         self.model = model        
         self.device = next(model.parameters()).device
@@ -96,8 +95,6 @@ class CE_DDIM_sampler(nn.Module):
         self.nc           = num_channel
         self.alpha_star   = alpha_star
         self.sigma_thresh = sigma_thresh_hu
-        self.tile         = refine_tile
-        self.refine_steps = refine_steps
         self.beta_1 = 4e-4
         self.beta_T = 0.02
         self.refine = False
@@ -142,27 +139,22 @@ class CE_DDIM_sampler(nn.Module):
             t_cur  = torch.full((B,), ts[idx],   device=device, dtype=torch.long)
 
             t_next = torch.full((B,), ts[idx+1], device=device, dtype=torch.long)
-
             # --- predict ε̂ and log σ̂²_ε -----------------------------------
             eps_hat, log_var_hat = self.model(torch.cat([x_t, cbct], dim=1), t_cur)
             log_var_hat = torch.clamp(log_var_hat, -12.0, 3.0)
             sigma_eps2  = torch.exp(log_var_hat)
-
             # --- coefficients -------------------------------------------------
             alpha_t     = self._extract(self.alphas_cumprod, t_cur,  x_t.shape)
             alpha_prev  = self._extract(self.alphas_cumprod, t_next, x_t.shape)
             beta_t      = 1.0 - alpha_t
-
             # --- x0 mean/var (analytic reparam) ------------------------------
             mu_x0    = (x_t - beta_t.sqrt() * eps_hat) / safe_sqrt(alpha_t)
             mu_x0    = torch.clamp(mu_x0, 0.0, 1.0)  # stay in normalized range
             sigma_x0 = safe_sqrt((1 - alpha_t) / alpha_t) * safe_sqrt(sigma_eps2)
-
             # store final step outputs
             if idx == len(ts) - 2:
                 mu_out    = mu_x0
                 sigma_out = sigma_x0 * self.alpha_star  # conformal scaling later
-
             # --- DDIM update --------------------------------------------------
             frac = ((1 - alpha_prev) / (1 - alpha_t)) * (1 - alpha_t / alpha_prev)
             sigma_t = self.eta * safe_sqrt(frac)

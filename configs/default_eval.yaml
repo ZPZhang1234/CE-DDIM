@@ -1,0 +1,41 @@
+# Default Evaluation Configuration for Dual-Head Diffusion Model
+# =============================================================
+
+# Model Architecture Parameters
+T: 1000
+ch: 128
+ch_mult: [1, 2, 3, 4]
+attn: [2]
+num_res_blocks: 2
+dropout: 0.1
+input_channel: 4
+output_channel: 2
+num_channel: 2
+
+# Sampling Parameters
+sample_steps: 10
+skip_steps: 1
+eta: 1.0
+noise_weight: 0.3
+refine_hu_thresh: 30
+refine_steps: 0
+noise_scheduler: 'linear'
+
+# Data Parameters
+image_size: 256
+batch_size: 5
+vis_channel: 0  # Channel to visualize (0-based)
+
+# Diffusion Parameters
+beta_1: 4e-4
+beta_T: 0.02
+
+# HU Range for Medical Imaging
+hu_min: -1000
+hu_max: 3000
+
+# Uncertainty Calibration Levels
+coverage_levels: [0.683, 0.95, 0.99]
+
+# Output Settings
+experiment_name: null  # Will be auto-generated if not specified
