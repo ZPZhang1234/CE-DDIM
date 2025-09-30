@@ -8,9 +8,9 @@ A PyTorch implementation of a dual-head diffusion model that provides both high-
 
 ## 🚀 Features
 
-- **Dual-head architecture** with noise prediction and trainable uncertainty estimation
-- **Distributed training** support with PyTorch DDP
-- **Comprehensive evaluation** with image quality and uncertainty metrics
+- **Dual-head architecture** with noise prediction and log-variance estimation
+- **Distributed training** PyTorch DDP supported
+- **Comprehensive evaluation** with image quality
 - **Medical imaging focus** with HU (Hounsfield Unit) support
 
 ## 📋 Requirements
@@ -146,8 +146,8 @@ The evaluation script computes:
 ## 🎯 Results
 
 Expected performance on medical CT denoising:
-- **PSNR**: 35-40 dB
-- **SSIM**: 0.85-0.95
+- **PSNR**: 35-38 dB
+- **SSIM**: 0.90-0.95
 - **Inference Time**: ~0.5-2s per sample (depending on sampling steps)
 
 ## 🔧 Advanced Usage
