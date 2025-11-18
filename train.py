@@ -19,8 +19,6 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data.distributed import DistributedSampler
 import torch.distributed as dist
 import torch.optim.lr_scheduler as lr_scheduler
-
-# Third-party imports
 try:
     import wandb
     WANDB_AVAILABLE = True
@@ -34,7 +32,7 @@ from skimage.metrics import structural_similarity as ssim_sk
 
 # Local imports
 from diffusion_process import CE_DDIM_trainer
-from model_diffusion import UNetDualHead_clean
+from model_diffusion import UNet_CE_DDIM
 from dataset import create_paired_datasets
 
 
@@ -203,27 +201,12 @@ def setup_model_and_optimizer(config: Config, device: torch.device, logger: logg
     if config.pretrained_path:
         load_pretrained_weights(model, config.pretrained_path, logger)
     
-    # Setup parameter groups
-    eps_params = []
-    logvar_params = []
-    
-    for name, param in model.named_parameters():
-        if 'logvar_head' in name:
-            logvar_params.append(param)
-        elif 'eps_head' in name:
-            param.requires_grad_(False)  # Freeze eps_head
-        else:
-            eps_params.append(param)  # Trainable backbone
-    
     # Create optimizer
-    optimizer = torch.optim.AdamW([
-        {'params': eps_params, 'lr': config.backbone_lr},
-        {'params': logvar_params, 'lr': config.logvar_lr}
-    ], betas=(0.9, 0.999), eps=1e-8, weight_decay=1e-5)
-    
-    logger.info(f"Model created with {sum(p.numel() for p in model.parameters()):,} total parameters")
-    logger.info(f"Trainable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad):,}")
-    logger.info(f"Frozen parameters: {sum(p.numel() for p in model.parameters() if not p.requires_grad):,}")
+    optimizer = torch.optim.AdamW(
+    lr=1e-4,
+    params=model.parameters(),
+    betas=(0.9, 0.999), eps=1e-8, weight_decay=1e-5
+    )
     
     return model, optimizer
 

@@ -123,6 +123,8 @@ class CE_DDIM_sampler(nn.Module):
         ts = ts[::self.skip_steps]
         if ts[-1] != 0:
             ts = np.append(ts, 0)
+        x_t = extract(self.alphas_cumprod, timesteps[0], x_t.shape).sqrt() * x_t \
+             + (1 - extract(self.alphas_cumprod, timesteps[0], x_t.shape)).sqrt() * torch.randn_like(x_t)
 
         mu_out    = None
         sigma_out = None

@@ -217,10 +217,7 @@ def add_zoom_overlay(ax, img, *,
                      inset_w_frac=0.35,      # inset width as fraction of parent axes
                      pad_frac=0.02,          # inset padding from top-right corner
                      cmap=None, norm=None):
-    """
-    Overlays a zoomed inset inside 'ax' (top-right). Draws a dotted red ROI on the parent.
-    Keeps aspect by showing the *full image* in the inset and cropping via x/y limits.
-    """
+
     if roi_h is None:
         roi_h = roi_w
 
@@ -246,7 +243,6 @@ def add_zoom_overlay(ax, img, *,
     bottom = 1.0 - inset_h_frac - pad_frac
     axins  = ax.inset_axes([left, bottom, inset_w_frac, inset_h_frac],
                            transform=ax.transAxes)
-
     # show full image, then crop view → preserves geometry
     axins.imshow(img, cmap=cmap, norm=norm, origin='upper', aspect='equal')
     axins.set_xlim(x0, x1)
@@ -255,7 +251,6 @@ def add_zoom_overlay(ax, img, *,
     for s in axins.spines.values():
         s.set_linewidth(0.8)
     return axins
-
 
 def displaywindow(img,
                   display_window_center,
