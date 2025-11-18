@@ -47,7 +47,7 @@ class CE_DDIM_trainer(nn.Module):
         eps_true = noise                        # ground-truth noise
         # ───────────────── model prediction ─────────────────────
         eps_hat, log_var_hat = self.model(torch.cat([x_t, cbct], dim=1), t)
-        log_var_hat = torch.clamp(log_var_hat, min=-14.0, max=2.0)
+        log_var_hat = torch.clamp(log_var_hat, min=-10.0, max=10.0)
         w_t = 1. / (extract(self.sqrt_one_minus_alphas_bar, t, ct.shape) ** 2)
 
         # ───────────────── loss computation ─────────────────────
@@ -60,7 +60,7 @@ class CE_DDIM_trainer(nn.Module):
         L_var_pixel = w_t * (var_inv * diff_sq + log_var_hat)
         L_var = L_var_pixel.mean() / w_t.mean()
 
-        LOG_SIGMA0_SQ = 0.0     # Expected noise variance (ε ~ N(0,1))
+        LOG_SIGMA0_SQ = 0.0 
         LAMBDA_TV     = 1e-6    # Total variation weight
         LAMBDA_PRIOR  = 1e-6    # Prior regularization weight
 
@@ -123,8 +123,8 @@ class CE_DDIM_sampler(nn.Module):
         ts = ts[::self.skip_steps]
         if ts[-1] != 0:
             ts = np.append(ts, 0)
-        x_t = extract(self.alphas_cumprod, timesteps[0], x_t.shape).sqrt() * x_t \
-             + (1 - extract(self.alphas_cumprod, timesteps[0], x_t.shape)).sqrt() * torch.randn_like(x_t)
+        x_t = extract(self.alphas_cumprod, ts[0], x_t.shape).sqrt() * x_t \
+             + (1 - extract(self.alphas_cumprod, ts[0], x_t.shape)).sqrt() * torch.randn_like(x_t)
 
         mu_out    = None
         sigma_out = None
