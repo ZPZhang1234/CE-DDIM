@@ -6,6 +6,7 @@
 
 A PyTorch implementation of a dual-head diffusion model that provides both high-quality image denoising and calibrated uncertainty estimates. This model architecture features separate heads for noise prediction (eps_head) and uncertainty estimation (logvar_head), enabling uncertainty-aware image reconstruction.
 
+
 ## 📊 Usage
 
 ### Training
@@ -130,7 +131,30 @@ The training script uses a combination of:
 - **L_var**: Negative log-likelihood for uncertainty learning
 - **TV Loss**: Total variation regularization for spatial smoothness
 - **Prior Loss**: L2 regularization toward expected noise levels
+<!-- 
+### Uncertainty Calibration
 
+The `alpha_star` parameter scales predicted uncertainties for proper calibration:
+```python
+# Fit alpha_star automatically
+python evaluate.py --fit_alpha_star --model_path model.pt --data_path data/
+
+# Use specific alpha_star value
+python evaluate.py --alpha_star 1.2 --model_path model.pt --data_path data/
+``` -->
+
+<!-- ## 📚 Citation
+
+If you use this code in your research, please cite:
+
+```bibtex
+@article{your_paper_2024,
+  title={Dual-Head Diffusion Models for Uncertainty-Aware Image Denoising},
+  author={Your Name and Co-authors},
+  journal={Your Journal},
+  year={2024}
+}
+``` -->
 
 ## 📄 License
 
@@ -139,3 +163,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📧 Contact
+
+For questions or issues, please:
+- Open an issue on GitHub
+- Contact: zipei.zhang@aalto.fi
