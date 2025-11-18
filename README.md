@@ -6,29 +6,6 @@
 
 A PyTorch implementation of a dual-head diffusion model that provides both high-quality image denoising and calibrated uncertainty estimates. This model architecture features separate heads for noise prediction (eps_head) and uncertainty estimation (logvar_head), enabling uncertainty-aware image reconstruction.
 
-## 🚀 Features
-
-- **Dual-head architecture** with noise prediction and log-variance estimation
-- **Distributed training** PyTorch DDP supported
-- **Comprehensive evaluation** with image quality
-- **Medical imaging focus** with HU (Hounsfield Unit) support
-
-## 📋 Requirements
-
-```bash
-pip install torch torchvision torchaudio
-pip install numpy scipy scikit-image matplotlib
-pip install pyyaml wandb  # Optional for experiment tracking
-```
-
-## 🔧 Installation
-
-```bash
-git clone https://github.com/your-username/dual-head-diffusion.git
-cd dual-head-diffusion
-pip install -r requirements.txt
-```
-
 ## 📊 Usage
 
 ### Training
@@ -46,11 +23,6 @@ python train.py --data_path /path/to/brain/data --dataset_type brain --pretraine
 **Multi-GPU distributed training:**
 ```bash
 torchrun --nproc_per_node=4 train.py --data_path /path/to/data --dataset_type pelvis --use_wandb --experiment_name my_experiment
-```
-
-**With custom configuration:**
-```bash
-python train.py --config configs/default_train.yaml --data_path /path/to/data --dataset_type brain
 ```
 
 ### Evaluation
@@ -158,30 +130,7 @@ The training script uses a combination of:
 - **L_var**: Negative log-likelihood for uncertainty learning
 - **TV Loss**: Total variation regularization for spatial smoothness
 - **Prior Loss**: L2 regularization toward expected noise levels
-<!-- 
-### Uncertainty Calibration
 
-The `alpha_star` parameter scales predicted uncertainties for proper calibration:
-```python
-# Fit alpha_star automatically
-python evaluate.py --fit_alpha_star --model_path model.pt --data_path data/
-
-# Use specific alpha_star value
-python evaluate.py --alpha_star 1.2 --model_path model.pt --data_path data/
-``` -->
-
-<!-- ## 📚 Citation
-
-If you use this code in your research, please cite:
-
-```bibtex
-@article{your_paper_2024,
-  title={Dual-Head Diffusion Models for Uncertainty-Aware Image Denoising},
-  author={Your Name and Co-authors},
-  journal={Your Journal},
-  year={2024}
-}
-``` -->
 
 ## 📄 License
 
@@ -190,9 +139,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📧 Contact
-
-For questions or issues, please:
-- Open an issue on GitHub
-- Contact: zipei.zhang@aalto.fi

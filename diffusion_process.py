@@ -148,12 +148,11 @@ class CE_DDIM_sampler(nn.Module):
             # store final step outputs
             if idx == len(ts) - 2:
                 mu_out    = mu_x0
-                sigma_out = sigma_x0 * self.alpha_star  # conformal scaling later
+                sigma_out = sigma_x0 * self.alpha_star 
             # --- DDIM update --------------------------------------------------
             frac = ((1 - alpha_prev) / (1 - alpha_t)) * (1 - alpha_t / alpha_prev)
             sigma_t = self.eta * safe_sqrt(frac)
 
-            # sqrt term must be positive
             dir_scale = safe_sqrt(torch.clamp(1 - alpha_prev - sigma_t**2, min=0.0))
 
             noise = sigma_t * torch.randn_like(x_t) if self.eta > 0 else 0.0
