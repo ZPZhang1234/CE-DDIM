@@ -53,8 +53,7 @@ class CE_DDIM_trainer(nn.Module):
         # ───────────────── loss computation ─────────────────────
         # Compute prediction error for variance loss
         diff_sq = (eps_true - eps_hat).pow(2)
-        L_eps = (eps_hat, eps_true).pow(2).detach() # For monitoring only
-
+        L_eps = F.mse_loss(eps_hat, eps_true).detach() # For monitoring only 
         # L_var: Negative log-likelihood loss
         var_inv = torch.exp(-log_var_hat)      # 1/σ̂²
         L_var_pixel = w_t * (var_inv * diff_sq + log_var_hat)
